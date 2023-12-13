@@ -1,0 +1,12 @@
+#-----------------------------------------------------------
+# Vivado v2019.1 (64-bit)
+# SW Build 2552052 on Fri May 24 14:47:09 MDT 2019
+# IP Build 2548770 on Fri May 24 18:01:18 MDT 2019
+# Start of session at: Wed Nov  1 14:44:45 2023
+# Process ID: 2748740
+# Current directory: /home/jianq/Documents/FYP/Lab_sessions/demo1
+# Command line: vivado -mode tcl -source project1.tcl
+# Log file: /home/jianq/Documents/FYP/Lab_sessions/demo1/vivado.log
+# Journal file: /home/jianq/Documents/FYP/Lab_sessions/demo1/vivado.jou
+#-----------------------------------------------------------
+source project1.tcl

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivado Compilation Service</title>
+</head>
+<body>
+    <h1>Vivado File Compiler</h1>
+
+    <form id="uploadForm" enctype="multipart/form-data">
+        <label for="verilogFiles">Upload Verilog files (.v):</label>
+        <input type="file" id="verilogFiles" name="verilog_files" multiple><br><br>
+
+        <label for="constraintsFile">Upload Constraints file (.xdc):</label>
+        <input type="file" id="constraintsFile" name="constraints_file"><br><br>
+
+        <input type="button" value="Compile" onclick="uploadFiles()">
+    </form>
+
+    <div id="response"></div>
+
+    <script>
+        function uploadFiles() {
+            const formData = new FormData();
+            const verilogFiles = document.querySelector('#verilogFiles').files;
+            const constraintsFile = document.querySelector('#constraintsFile').files[0];
+
+            for (let i = 0; i < verilogFiles.length; i++) {
+                formData.append('verilog_files', verilogFiles[i]);
+            }
+            formData.append('constraints_file', constraintsFile);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('response').innerText = JSON.stringify(data, null, 2);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>
