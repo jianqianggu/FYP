@@ -5,8 +5,9 @@ import subprocess
 app = Flask(__name__)
 
 # Directory to store uploaded files and compiled binaries
-UPLOAD_FOLDER = '/path/to/uploaded/files'
-COMPILE_OUTPUT_FOLDER = '/path/to/compiled/binaries'
+UPLOAD_FOLDER = '/usr/src/app/src'
+COMPILE_OUTPUT_FOLDER = '/usr/src/app/output'
+CONSTRAINTS_PATH = '/usr/src/app/cons/constraints.xdc'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(COMPILE_OUTPUT_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -18,13 +19,12 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload_files():
-    if 'verilog_files' not in request.files and 'constraints_file' not in request.files:
+    if 'verilog_files' not in request.files:
         return jsonify({'message': 'No files part in the request'}), 400
 
     verilog_files = request.files.getlist('verilog_files')
-    constraints_file = request.files['constraints_file']
 
-    if not all(file.filename.endswith('.v') for file in verilog_files) or not constraints_file.filename.endswith('.xdc'):
+    if not all(file.filename.endswith('.v') for file in verilog_files):
         return jsonify({'message': 'Invalid file type'}), 400
 
     saved_files = []
@@ -33,22 +33,19 @@ def upload_files():
         file.save(file_path)
         saved_files.append(file_path)
 
-    constraints_path = os.path.join(app.config['UPLOAD_FOLDER'], constraints_file.filename)
-    constraints_file.save(constraints_path)
-
-    compile_status, output, binary_file_path = compile_verilog(saved_files, constraints_path)
+    compile_status, output, binary_file_path = compile_verilog(saved_files, constraints_file=None)
 
     if compile_status == 'Success':
         return send_file(binary_file_path, as_attachment=True)
     else:
         return jsonify({'message': 'Compilation failed', 'output': output})
 
-def compile_verilog(verilog_files, constraints_file):
+def compile_verilog(verilog_files):
     # Replace with actual logic to compile files with Vivado
     # This is just a placeholder
     try:
         # Example command, modify according to your Vivado script and how you pass file paths
-        command = f"vivado -mode batch -source your_vivado_script.tcl --args {verilog_files} {constraints_file}"
+        command = f"vivado -mode batch -source your_vivado_script.tcl"
         result = subprocess.run(command, check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
         # Locate the compiled binary file
@@ -57,6 +54,8 @@ def compile_verilog(verilog_files, constraints_file):
 
         return 'Success', result.stdout + '\n' + result.stderr, binary_file_path
     except subprocess.CalledProcessError as e:
+        command = f"exit"
+        result = subprocess.run(command, check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         return 'Error', str(e), None
 
 if __name__ == '__main__':

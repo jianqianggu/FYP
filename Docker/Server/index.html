@@ -12,9 +12,6 @@
         <label for="verilogFiles">Upload Verilog files (.v):</label>
         <input type="file" id="verilogFiles" name="verilog_files" multiple><br><br>
 
-        <label for="constraintsFile">Upload Constraints file (.xdc):</label>
-        <input type="file" id="constraintsFile" name="constraints_file"><br><br>
-
         <input type="button" value="Compile" onclick="uploadFiles()">
     </form>
 
@@ -24,12 +21,10 @@
         function uploadFiles() {
             const formData = new FormData();
             const verilogFiles = document.querySelector('#verilogFiles').files;
-            const constraintsFile = document.querySelector('#constraintsFile').files[0];
 
             for (let i = 0; i < verilogFiles.length; i++) {
                 formData.append('verilog_files', verilogFiles[i]);
             }
-            formData.append('constraints_file', constraintsFile);
 
             fetch('/upload', {
                 method: 'POST',
