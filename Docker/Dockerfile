@@ -2,6 +2,8 @@ FROM ubuntu:jammy
 
 ENV DEBIAN_FRONTEND noninteractive
 
+SHELL ["/bin/bash", "-c"]
+
 RUN \
   apt update && \
   apt upgrade -y && \
@@ -30,19 +32,23 @@ COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 
-# RUN \
-#   cat /vivado-installer/Xilinx_Vivado_SDK_2019.1_0524_1430.tar.gz | tar zx --strip-components=1 -C /vivado-installer && \
-#   ./vivado-installer/xsetup \
-#     --batch Install \
-#     --agree 3rdPartyEULA,XilinxEULA,WebTalkTerms \
-#     --config ./vivado-installer/install_config.txt && \
+RUN \
+   ./vivado-installer/xsetup \
+     --batch Install \
+     --agree 3rdPartyEULA,XilinxEULA,WebTalkTerms \
+     --config ./vivado-installer/install_config.txt
+
+#dont enable doesnt work
+#  RUN  chmod -R 777 /vivado-installer && \
 #   rm -rf /vivado-installer
 
 # for refrence
 # ./vivado-installer/xsetup --batch Install --agree 3rdPartyEULA,XilinxEULA,WebTalkTerms --config ./vivado-installer/install_config.txt 
 
-# RUN source /tools/Xilinx/Vivado/2019.1/settings64.sh\
-#     && vivado -version
+
+
+RUN source /tools/Xilinx/Vivado/2019.1/settings64.sh\
+     && vivado -version
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
@@ -55,7 +61,7 @@ WORKDIR /usr/src/app
 COPY Server Server
 COPY Build Build
 # Set environment variables
-ENV FLASK_APP=server.py
+ENV FLASK_APP=Server/server.py
 ENV FLASK_ENV=development
 # Optional: Set python3 as the default python
 RUN ln -s /usr/bin/python3 /usr/bin/python
