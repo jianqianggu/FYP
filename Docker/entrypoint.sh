@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# export FLASK_APP=flask.py
-# export FLASK_ENV=development
-# flask run
+# Source Vivado environment and check version
+source /tools/Xilinx/Vivado/2019.1/settings64.sh
+vivado -version
 
 UART_GROUP_ID=${UART_GROUP_ID:-20}
 if ! grep -q "x:${UART_GROUP_ID}:" /etc/group; then

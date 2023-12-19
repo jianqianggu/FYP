@@ -1,41 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vivado Compilation Service</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .output-container {
+            display: flex;
+            justify-content: center;
+            /* Centers content horizontally */
+            align-items: normal;
+            /* Centers content vertically (if you want vertical centering) */
+        }
+
+        #compileOutput {
+            height: 300px;
+            /* Default height, adjust as needed */
+            width: 75%;
+            /* Full width of its container */
+            overflow-y: auto;
+            border: 1px solid #000000;
+            /* Optional: adds a border around the div */
+            padding: 10px;
+            margin-top: 20px;
+            background-color: #c9ced3;
+            /* Optional: background color */
+            font-family: monospace;
+            /* Optional: changes font to monospace for better readability */
+            resize: both;
+            /* Enables vertical resizing */
+            overflow: auto;
+            /* Required for 'resize' to work */
+        }
+    </style>
 </head>
+
 <body>
-    <h1>Vivado File Compiler</h1>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <div class="container">
+        <h1 class="text-center my-4">Vivado File Compiler</h1>
 
-    <form id="uploadForm" enctype="multipart/form-data">
-        <label for="verilogFiles">Upload Verilog files (.v):</label>
-        <input type="file" id="verilogFiles" name="verilog_files" multiple><br><br>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="verilogFiles">Upload Verilog files (.v):</label>
+                <input type="file" class="form-control-file" id="verilogFiles" name="verilog_files" multiple>
+            </div>
+            <div class="form-group">
+                <label for="topModuleName">Top Module Name:</label>
+                <input type="text" class="form-control" id="topModuleName" name="top_module_name">
+            </div>
+            <button type="button" class="btn btn-primary" id="compileButton" onclick="uploadFiles()">Compile</button>
+            <button type="button" class="btn btn-secondary disabled" id="downloadButton" onclick="downloadFile()"
+                disabled>Download</button>
 
-        <input type="button" value="Compile" onclick="uploadFiles()">
-    </form>
+        </form>
 
-    <div id="response"></div>
+        <div id="response" class="mt-3"></div>
+    </div>
+
+    <div class="output-container">
+        <div id="compileOutput"></div>
+    </div>
+
 
     <script>
+        function downloadFile() {
+            window.location.href = '/download-file';
+        }
+
+        document.getElementById('downloadButton').addEventListener('click', downloadFile);
+
         function uploadFiles() {
+            document.getElementById('compileOutput').innerHTML = '';
+
             const formData = new FormData();
             const verilogFiles = document.querySelector('#verilogFiles').files;
+            const topModuleName = document.querySelector('#topModuleName').value;
 
             for (let i = 0; i < verilogFiles.length; i++) {
                 formData.append('verilog_files', verilogFiles[i]);
+            }
+
+            if (topModuleName) {
+                formData.append('top_module_name', topModuleName);
             }
 
             fetch('/upload', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('response').innerText = JSON.stringify(data, null, 2);
-            })
-            .catch(error => console.error('Error:', error));
+                .then(response => response.json())
+                .then(data => {
+                    if (data.compiled_file_path) {
+                        console.log('Success:', data);
+                        // Change compile button to green and update text
+                        let compileButton = document.getElementById('compileButton');
+                        compileButton.classList.remove('btn-primary');
+                        compileButton.classList.add('btn-success');
+                        compileButton.innerText = 'Compile Successful';
+
+                        // Enable download button
+                        let downloadButton = document.getElementById('downloadButton');
+                        downloadButton.classList.remove('btn-secondary', 'disabled');
+                        downloadButton.classList.add('btn-primary');
+                        downloadButton.disabled = false;
+                    } else {
+                        document.getElementById('response').innerText = JSON.stringify(data, null, 2);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // Handle error state if needed
+                });
         }
+
+        // Socket.io
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on('compile_output', function (msg) {
+            var compileOutputElement = document.getElementById('compileOutput');
+            compileOutputElement.innerHTML += msg.data + '<br>';
+
+            // Auto-scroll to the bottom
+            compileOutputElement.scrollTop = compileOutputElement.scrollHeight;
+        });
     </script>
+
+    <!-- Bootstrap JS and Dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+
 </body>
+
 </html>
