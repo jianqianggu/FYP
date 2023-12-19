@@ -2,7 +2,6 @@ FROM ubuntu:jammy
 
 ENV DEBIAN_FRONTEND noninteractive
 
-SHELL ["/bin/bash", "-c"]
 
 RUN \
   apt update && \
@@ -10,10 +9,7 @@ RUN \
   apt -y --no-install-recommends install \
     ca-certificates curl sudo xorg dbus dbus-x11 ubuntu-gnome-default-settings gtk2-engines \
     fonts-ubuntu python3.10 python3-pip build-essential && \
-  apt-get autoclean && \
-  apt-get autoremove && \
-  rm -rf /var/lib/apt/lists/* && \
-  echo "%sudo ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+    echo "%sudo ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 RUN \
   dpkg --add-architecture i386 && \
@@ -33,23 +29,19 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 
 
 RUN \
+cat /vivado-installer/Xilinx_Vivado_SDK_2019.1_0524_1430.tar.gz | tar zx --strip-components=1 -C /vivado-installer && \
    ./vivado-installer/xsetup \
      --batch Install \
      --agree 3rdPartyEULA,XilinxEULA,WebTalkTerms \
-     --config ./vivado-installer/install_config.txt
-
-#dont enable doesnt work
-#  RUN  chmod -R 777 /vivado-installer && \
-#   rm -rf /vivado-installer
-
-# for refrence
-# ./vivado-installer/xsetup --batch Install --agree 3rdPartyEULA,XilinxEULA,WebTalkTerms --config ./vivado-installer/install_config.txt 
+     --config ./vivado-installer/install_config.txt && \
+    rm -rf /vivado-installer
 
 
 
-RUN source /tools/Xilinx/Vivado/2019.1/settings64.sh\
-     && vivado -version
+#SHELL ["/bin/bash", "-c", "source /tools/Xilinx/Vivado/2019.1/settings64.sh && vivado -version"]
 
+#Please Make changes only after this line, the above commands are large and slow to build. changing them will remove the cache.
+#----------------------------------------------------------------------------------------
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
@@ -63,6 +55,11 @@ COPY Build Build
 # Set environment variables
 ENV FLASK_APP=Server/server.py
 ENV FLASK_ENV=development
+
+#implement this for vivado compilation
+#https://support.xilinx.com/s/article/000034450?language=en_US
+ENV LD_PRELOAD=/lib/x86_64-linux-gnu/libudev.so.1
+
 # Optional: Set python3 as the default python
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
