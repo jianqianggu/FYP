@@ -1,16 +1,24 @@
 from flask import Flask, request, jsonify, send_file, render_template, session
+
+import os,subprocess,logging,shutil,requests,json
 from flask_socketio import SocketIO, emit
+from dotenv import load_dotenv
 import os
 import subprocess
 import logging
 import shutil
+import requests
+import json
 
 logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
 socketio = SocketIO(app)
 
+load_dotenv()
 app.secret_key = 'your_secret_key'  # Set a secret key for session management
+auth_key = os.getenv('PERPLEXITY_AUTH_KEY')
+
 
 
 # Directory to store uploaded files and compiled binaries
@@ -55,6 +63,8 @@ def upload_files():
         saved_files.append(file_path)
         logging.debug(f'Saved file {file_path}')
 
+            # You can now include this content in your prompt
+
 
     compile_status, output, binary_file_path = compile_verilog(
         top_module_name, 
@@ -68,7 +78,30 @@ def upload_files():
         session['binary_file_path'] = binary_file_path
         return jsonify({'compiled_file_path': binary_file_path}), 200
     else:
-        return jsonify({'message': 'Compilation failed', 'output': output})
+        file_contents = [
+            f"""
+        File Name: {os.path.basename(file.filename)}
+        ---------------------------------
+        {file.read()}
+        ---------------------------------
+        """
+            for file in verilog_files
+            if file.filename.endswith('.v')
+        ]
+
+        # Now, concatenate everything into one big f-string
+        prompt = f"""
+        Files and their content for Verilog compilation:
+        ---------------------------------
+        {''.join(file_contents)}
+
+        Compilation Output Logs:
+        ---------------------------------
+        {output}
+        ---------------------------------
+        """        
+        perplexity_response = send_to_gpt(output)
+        return jsonify({'message': 'Compilation failed', 'output': output, 'feedback': perplexity_response}), 400
 
 
 
@@ -130,9 +163,12 @@ def compile_verilog(top_module_name, output_directory, verilog_files_path, const
     vivado_command = ["vivado", "-nolog", "-nojournal", "-mode", "batch", "-source", "Build/src/vars.tcl", "-source", "Build/build.tcl"]
 
     try:
+        output = []
         with subprocess.Popen(vivado_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, universal_newlines=True) as proc:
             for line in proc.stdout:
                 logging.debug(line.strip())
+                output.append(line.strip())
+
                 socketio.emit('compile_output', {'data': line})
 
             proc.stdout.close()
@@ -144,7 +180,7 @@ def compile_verilog(top_module_name, output_directory, verilog_files_path, const
         if os.path.exists(binary_file_path):
             return 'Success', 'Compilation successful', binary_file_path
         else:
-            return 'Error', 'Binary file not found', None
+            return 'Error', 'Binary file not found', output
 
     except subprocess.CalledProcessError as e:
         logging.error(str(e))
@@ -153,6 +189,34 @@ def compile_verilog(top_module_name, output_directory, verilog_files_path, const
         logging.error(str(e))
         return 'Error', str(e), None
 
+def send_to_gpt(compilation_output):
+    url = "https://api.perplexity.ai/chat/completions"
+
+    payload = {
+        "model": "mixtral-8x7b-instruct",
+        "messages": [
+            {
+                "role": "system",
+                "content": "You are a Senior Chip Architect at Nvidia, given the files and output log, please tell me why my vivado compile has failed."
+            },
+            {
+                "role": "user",
+                "content": compilation_output
+            }
+        ]
+    }
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "authorization": auth_key
+    }
+
+    response = requests.post(url, json=payload, headers=headers)
+    if response.status_code == 200:
+        return json.loads(response.text)
+    else:
+        # Handle errors (e.g., logging, retry logic, etc.)
+        return None
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
