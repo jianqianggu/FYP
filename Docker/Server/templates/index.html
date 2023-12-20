@@ -134,8 +134,20 @@
             })
                 .then(response => response.json())
                 .then(data => {
+                    if (data.compiled_file_path) {
+                        console.log('Success:', data);
+                        // Change compile button to green and update text
+                        let compileButton = document.getElementById('compileButton');
+                        compileButton.classList.remove('btn-primary');
+                        compileButton.classList.add('btn-success');
+                        compileButton.innerText = 'Compile Successful';
 
-                    if (data.feedback) {
+                        // Enable download button
+                        let downloadButton = document.getElementById('downloadButton');
+                        downloadButton.classList.remove('btn-secondary', 'disabled');
+                        downloadButton.classList.add('btn-primary');
+                        downloadButton.disabled = false;
+                    } else {
                         let suggestionsBox = document.getElementById('suggestionsBox');
                         suggestionsBox.innerHTML = `<strong>Suggestions:</strong><br><pre>${data.feedback}`;
                     }
