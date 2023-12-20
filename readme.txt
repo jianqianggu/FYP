@@ -7,11 +7,11 @@ please also unpack the tar file to reduce build times
 You can also choose to run the download scripts (self hosted)
 for Linux
 
-.Docker/Vivado/download.sh
+./Docker/Vivado/download.sh
 
 for Windows
 
-.Docker/Vivado/download.ps1
+.\Docker\Vivado\download.ps1
 
 Project structure
 inside this docker file you will find the vivado compiltion enviroment with 2019.1, along with the flask server to act as an web interface for users to send their .v files to be compiled

@@ -16,6 +16,10 @@
             /* Centers content vertically (if you want vertical centering) */
         }
 
+        .output-container button {
+            margin-bottom: 5px;
+        }
+
         #compileOutput {
             height: 300px;
             /* Default height, adjust as needed */
@@ -34,6 +38,32 @@
             /* Enables vertical resizing */
             overflow: auto;
             /* Required for 'resize' to work */
+        }
+
+        #suggestionsBox {
+            height: 300px;
+            /* Default height, adjust as needed */
+            width: 75%;
+            /* Full width of its container */
+            overflow-y: auto;
+            border: 1px solid #000000;
+            /* Optional: adds a border around the div */
+            padding: 10px;
+            margin-top: 20px;
+            background-color: #c9ced3;
+            /* Optional: background color */
+            font-family: monospace;
+            /* Optional: changes font to monospace for better readability */
+            resize: both;
+            /* Enables vertical resizing */
+            overflow: auto;
+            /* Required for 'resize' to work */
+            white-space: pre-wrap;
+            /* Preserves whitespace and line breaks and allows text to wrap */
+            word-wrap: break-word;
+            /* Ensures that words longer than the width of the box will be broken and wrapped onto the next line */
+            overflow-wrap: break-word;
+            /* Similar to word-wrap, ensures that long words can break and wrap to the next line */
         }
     </style>
 </head>
@@ -58,11 +88,20 @@
 
         </form>
 
-        <div id="response" class="mt-3"></div>
-    </div>
+        <!-- <div id="response" class="mt-3" ondblclick="selectText('response')"></div> -->
 
-    <div class="output-container">
-        <div id="compileOutput"></div>
+
+    </div>
+    <div class="output-container" style="margin-top: 20px;">
+        <div id="compileOutput" style="margin-top: 5px;" ondblclick="selectText('compileOutput')"></div>
+        <br>
+        <button class="btn btn-secondary btn-sm" onclick="copyToClipboard('#compileOutput')">Copy Output</button>
+    </div>
+    <br>
+    <div class="output-container" style="margin-top: 20px;">
+        <div id="suggestionsBox" style="margin-top: 5px;" ondblclick="selectText('suggestionsBox')"></div>
+        <br>
+        <button class="btn btn-secondary btn-sm" onclick="copyToClipboard('#suggestionsBox')">Copy Suggestions</button>
     </div>
 
 
@@ -88,32 +127,22 @@
                 formData.append('top_module_name', topModuleName);
             }
 
+
             fetch('/upload', {
                 method: 'POST',
                 body: formData
             })
                 .then(response => response.json())
                 .then(data => {
-                    if (data.compiled_file_path) {
-                        console.log('Success:', data);
-                        // Change compile button to green and update text
-                        let compileButton = document.getElementById('compileButton');
-                        compileButton.classList.remove('btn-primary');
-                        compileButton.classList.add('btn-success');
-                        compileButton.innerText = 'Compile Successful';
 
-                        // Enable download button
-                        let downloadButton = document.getElementById('downloadButton');
-                        downloadButton.classList.remove('btn-secondary', 'disabled');
-                        downloadButton.classList.add('btn-primary');
-                        downloadButton.disabled = false;
-                    } else {
-                        document.getElementById('response').innerText = JSON.stringify(data, null, 2);
+                    if (data.feedback) {
+                        let suggestionsBox = document.getElementById('suggestionsBox');
+                        suggestionsBox.innerHTML = `<strong>Suggestions:</strong><br><pre>${data.feedback}`;
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    // Handle error state if needed
+                    // ... existing error handling code ...
                 });
         }
 
@@ -127,6 +156,25 @@
             // Auto-scroll to the bottom
             compileOutputElement.scrollTop = compileOutputElement.scrollHeight;
         });
+
+        function copyToClipboard(elementId) {
+            var content = document.querySelector(elementId);
+            var range = document.createRange();
+            range.selectNode(content);
+            window.getSelection().removeAllRanges(); // Clear existing selection
+            window.getSelection().addRange(range); // to select text
+            document.execCommand("copy");
+            window.getSelection().removeAllRanges(); // to deselect
+            alert("Content copied to clipboard");
+        }
+
+        function selectText(elementId) {
+            var content = document.getElementById(elementId);
+            if (window.getSelection().rangeCount > 0) window.getSelection().removeAllRanges();
+            var range = document.createRange();
+            range.selectNode(content);
+            window.getSelection().addRange(range);
+        }
     </script>
 
     <!-- Bootstrap JS and Dependencies -->

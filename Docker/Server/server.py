@@ -17,7 +17,7 @@ socketio = SocketIO(app)
 
 load_dotenv()
 app.secret_key = 'your_secret_key'  # Set a secret key for session management
-auth_key = os.getenv('PERPLEXITY_AUTH_KEY')
+auth_key = os.getenv('PERPLEXITY_API_KEY')
 
 
 
@@ -78,29 +78,29 @@ def upload_files():
         session['binary_file_path'] = binary_file_path
         return jsonify({'compiled_file_path': binary_file_path}), 200
     else:
-        file_contents = [
-            f"""
-        File Name: {os.path.basename(file.filename)}
-        ---------------------------------
-        {file.read()}
-        ---------------------------------
-        """
-            for file in verilog_files
-            if file.filename.endswith('.v')
-        ]
+        prompt = ""
+        for file in verilog_files:
+            file.seek(0)  # Reset file pointer to the beginning
 
-        # Now, concatenate everything into one big f-string
-        prompt = f"""
-        Files and their content for Verilog compilation:
-        ---------------------------------
-        {''.join(file_contents)}
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)            
+            with open(file_path, 'r') as file_content:
+                file_data = file_content.read()
 
-        Compilation Output Logs:
-        ---------------------------------
-        {output}
-        ---------------------------------
-        """        
-        perplexity_response = send_to_gpt(output)
+                # disabled to save tokens.
+
+                # prompt += f"""
+                #             File Name: {os.path.basename(file_path)}
+                #             {file_data}
+                #             """
+
+            # Add compilation output logs to the prompt
+            prompt += f"""
+                            Compilation Output Logs:
+                            {output}
+                            """      
+        perplexity_response = send_to_gpt(prompt)
+        logging.debug(f'Prompt sent to Perplexity: {prompt}')
+        # logging.debug(f'Perplexity response: {perplexity_response}')
         return jsonify({'message': 'Compilation failed', 'output': output, 'feedback': perplexity_response}), 400
 
 
@@ -180,7 +180,7 @@ def compile_verilog(top_module_name, output_directory, verilog_files_path, const
         if os.path.exists(binary_file_path):
             return 'Success', 'Compilation successful', binary_file_path
         else:
-            return 'Error', 'Binary file not found', output
+            return 'Error', output, 'Binary file not found'
 
     except subprocess.CalledProcessError as e:
         logging.error(str(e))
@@ -208,14 +208,30 @@ def send_to_gpt(compilation_output):
     headers = {
         "accept": "application/json",
         "content-type": "application/json",
-        "authorization": auth_key
+        "authorization": "Bearer " + auth_key
     }
+    if auth_key is None:
+        logging.error("API key is missing. It is a secret and not available in the repo.")
+    # Handle the missing key appropriately
 
     response = requests.post(url, json=payload, headers=headers)
     if response.status_code == 200:
-        return json.loads(response.text)
+        # Parse the response to JSON
+        response_json = response.json()
+        
+        # Extract the 'message' from the nested JSON structure
+        message_content = response_json['choices'][0]['message']['content']
+        logging.debug(f'response: {message_content}')
+        logging.debug(f'Token usage: {response_json["usage"]}')
+
+        
+        # Return only the message content
+        return message_content
     else:
         # Handle errors (e.g., logging, retry logic, etc.)
+        logging.error(f'payload: {payload}')
+        logging.error(f'headers: {headers}')
+        logging.error(f'response: {response}')
         return None
 
 if __name__ == '__main__':
