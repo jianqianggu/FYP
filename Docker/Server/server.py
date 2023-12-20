@@ -16,7 +16,7 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 
 load_dotenv()
-app.secret_key = 'your_secret_key'  # Set a secret key for session management
+app.secret_key = 'ea6vdnf9d610fcde'  # Set a secret key for session management
 auth_key = os.getenv('PERPLEXITY_API_KEY')
 
 

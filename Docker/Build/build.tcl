@@ -51,7 +51,7 @@ if { [catch {
     # STEP#4: run router, report actual utilization and timing, write checkpoint design, run drc, write verilog and xdc out
     #
     route_design
-    write_checkpoint -force $OutputDirectory/post_route
+    #write_checkpoint -force $OutputDirectory/post_route
 
     #write_verilog -force $OutputDirectory/ass2_impl_netlist.v
     #write_xdc -no_fixed_only -force $OutputDirectory/ass2_impl.xdc

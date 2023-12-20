@@ -54,7 +54,7 @@ COPY Server Server
 COPY Build Build
 # Set environment variables
 ENV FLASK_APP=Server/server.py
-ENV FLASK_ENV=development
+ENV FLASK_ENV=production
 
 #implement this for vivado compilation
 #https://support.xilinx.com/s/article/000034450?language=en_US
@@ -67,8 +67,15 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r Server/requirements.txt
 
-# # Make port 5000 available to the world outside this container
+# Flask debug
 EXPOSE 5000
 CMD ["flask", "run", "--host=0.0.0.0"]
+
+# #gunicon deployment
+# EXPOSE 8000
+# CMD ["gunicorn","-w", "8", "-b", ":8000", "Server.server:app"]
+
+EXPOSE 8000
+
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

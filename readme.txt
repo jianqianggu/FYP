@@ -7,6 +7,7 @@ please also unpack the tar file to reduce build times
 You can also choose to run the download scripts (self hosted)
 for Linux
 
+chmod +x /Docker/Vivado/download.sh
 ./Docker/Vivado/download.sh
 
 for Windows
