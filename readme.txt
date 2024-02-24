@@ -17,3 +17,22 @@ for Windows
 Project structure
 inside this docker file you will find the vivado compiltion enviroment with 2019.1, along with the flask server to act as an web interface for users to send their .v files to be compiled
 
+Build instructions
+1. run the download scripts
+for Linux
+
+chmod +x /Docker/Vivado/download.sh
+./Docker/Vivado/download.sh
+
+for Windows
+
+.\Docker\Vivado\download.ps1
+
+2. build docker file
+cd ./Docker
+docker build . -t vivado
+
+3. run docker file
+
+docker run vivado:latest
+
