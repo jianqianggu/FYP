@@ -11,3 +11,8 @@ echo "Downloading file..."
 curl -o $LOCAL_FILE $BLOB_URL
 
 echo "Download completed!"
+
+# Calculating the MD5 hash
+echo "Calculating MD5 hash, Correct Hash: 47388a71dc5962a4b8d76e752928616e"
+md5sum "$LOCAL_FILE"
+

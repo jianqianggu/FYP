@@ -24,6 +24,8 @@ for Linux
 chmod +x /Docker/Vivado/download.sh
 ./Docker/Vivado/download.sh
 
+MD5 SUM Value : 47388a71dc5962a4b8d76e752928616e
+
 for Windows
 
 .\Docker\Vivado\download.ps1

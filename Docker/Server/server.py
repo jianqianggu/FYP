@@ -17,7 +17,7 @@ socketio = SocketIO(app)
 
 load_dotenv()
 app.secret_key = 'ea6vdnf9d610fcde'  # Set a secret key for session management
-auth_key = os.getenv('PERPLEXITY_API_KEY')
+auth_key = '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'
 
 
 
