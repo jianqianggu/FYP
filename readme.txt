@@ -36,5 +36,7 @@ docker build . -t vivado
 
 3. run docker file
 
-docker run vivado:latest
+docker run -p 5000:5000 vivado:latest
 
+can access on your ddns proxy (assuming you set it up)
+http://jianqiang.ddns.net:8000/

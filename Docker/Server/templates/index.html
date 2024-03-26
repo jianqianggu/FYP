@@ -91,6 +91,9 @@
             <button type="button" class="btn btn-secondary disabled" id="loadFile" onclick="uploadBitstream()"
                 disabled>Load File</button>
 
+            <button type="button" class="btn btn-secondary disabled" id="redirect" onclick="Redirect()"
+                disabled>Next Website</button>
+
         </form>
 
         <!-- <div id="response" class="mt-3" ondblclick="selectText('response')"></div> -->
@@ -113,6 +116,9 @@
 
 
     <script>
+        function Redirect() {
+            window.location.href = "http://10.248.59.17:4000"
+        }
         function downloadFile() {
             window.location.href = '/download-file';
         }
@@ -129,7 +135,7 @@
             formData.append('file', file);
 
             // Send a POST request to the server
-            fetch('http://10.248.59.119:4000/upload', {
+            fetch('http://10.248.59.17:4000/upload', {
                 method: 'POST',
                 body: formData
             })
@@ -179,6 +185,12 @@
                         loadFileButton.classList.remove('btn-secondary', 'disabled');
                         loadFileButton.classList.add('btn-primary');
                         loadFileButton.disabled = false;
+
+                        // Enable redirect button
+                        let redirectButton= document.getElementById('redirect');
+                        redirectButton.classList.remove('btn-secondary', 'disabled');
+                        redirectButton.classList.add('btn-primary');
+                        redirectButton.disabled = false;
                     } else {
                         let suggestionsBox = document.getElementById('suggestionsBox');
                         suggestionsBox.innerHTML = `<strong>Suggestions:</strong><br><pre>${data.feedback}`;
