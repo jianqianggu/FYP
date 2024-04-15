@@ -91,8 +91,8 @@
             <button type="button" class="btn btn-secondary disabled" id="loadFile" onclick="uploadBitstream()"
                 disabled>Load File</button>
 
-            <button type="button" class="btn btn-secondary disabled" id="redirect" onclick="Redirect()"
-                disabled>Next Website</button>
+                <button type="button" class="btn btn-secondary" onclick="location.href='http://10.248.59.17:4000'" disabled>Next Website</button>
+
 
         </form>
 
@@ -116,9 +116,6 @@
 
 
     <script>
-        function Redirect() {
-            window.location.href = "http://10.248.59.17:4000"
-        }
         function downloadFile() {
             window.location.href = '/download-file';
         }
